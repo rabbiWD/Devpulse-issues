@@ -2,6 +2,7 @@
 import express, { type Application, type Request, type Response } from "express";
 import logger from "./middleware/logger";
 import { pool } from "./db";
+import authRoutes from "./api/routes/auth.routes"
 
 const app: Application = express();
 
@@ -18,7 +19,7 @@ app.get('/', (req: Request, res: Response) =>{
   });
 })
 
-app.post("/users", async(req: Request, res: Response)=>{
+app.post("/api/users", async(req: Request, res: Response)=>{
   const {name, email, password} = req.body;
   try {
       const result = await pool.query(`
@@ -36,5 +37,7 @@ app.post("/users", async(req: Request, res: Response)=>{
   })
   }
 })
+
+app.use("/auth",authRoutes)
 
 export default app;
