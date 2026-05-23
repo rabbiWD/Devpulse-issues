@@ -19,3 +19,9 @@ Method -> POST | URL -> /auth/signup | Time -> 2026-05-23T10:28:19.437Z
 Method -> POST | URL -> /auth/signup | Time -> 2026-05-23T10:29:11.300Z
 Method -> POST | URL -> /auth/signup | Time -> 2026-05-23T10:29:30.508Z
 Method -> POST | URL -> /auth/signup | Time -> 2026-05-23T10:30:42.534Z
+Method -> POST | URL -> /auth/signup | Time -> 2026-05-23T11:56:18.776Z
+Method -> POST | URL -> /auth/signup | Time -> 2026-05-23T11:56:32.180Z
+Method -> POST | URL -> /auth/signup | Time -> 2026-05-23T14:20:03.809Z
+Method -> GET | URL -> /auth/login | Time -> 2026-05-23T14:20:57.564Z
+Method -> POST | URL -> /auth/login | Time -> 2026-05-23T14:21:09.242Z
+Method -> POST | URL -> /auth/login | Time -> 2026-05-23T14:33:58.190Z

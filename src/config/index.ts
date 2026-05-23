@@ -9,7 +9,9 @@ dotenv.config({
 
 const config = {
     port: env.PORT,
-    database_url: env.DATABASE_URL as string
+    database_url: env.DATABASE_URL as string,
+    jwt_secret: env.JWT_SECRET as string,
+    refresh_secret: env.REFRESH_SECRET as string
 }
 
 export default config

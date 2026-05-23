@@ -33,7 +33,8 @@ class AuthService {
     if (!matchPassword) {
       throw new Error("Invalid Creadentials");
     }
-    // return userData;
+
+    return user;
   }
 }
 
