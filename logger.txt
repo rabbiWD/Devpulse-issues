@@ -89,3 +89,4 @@ Method -> POST | URL -> /api/issues | Time -> 2026-05-24T13:22:43.151Z
 Method -> POST | URL -> /api/auth/login | Time -> 2026-05-24T13:27:28.898Z
 Method -> PATCH | URL -> /api/issues/6 | Time -> 2026-05-24T13:28:09.557Z
 Method -> PATCH | URL -> /api/issues/6 | Time -> 2026-05-24T13:48:53.359Z
+Method -> GET | URL -> /api/issues | Time -> 2026-05-24T13:54:44.284Z
