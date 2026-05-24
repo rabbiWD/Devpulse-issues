@@ -1,0 +1,19 @@
+import express, {} from "express";
+import authRoutes from "./api/routes/auth.routes";
+import cookieParser from "cookie-parser";
+import issueRoutes from "./api/routes/issue.routes";
+const app = express();
+app.use(express.json());
+app.use(express.text());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.get("/", (req, res) => {
+    res.status(200).json({
+        message: "Express Server with TypeScript",
+        author: "Next Level",
+    });
+});
+app.use("/api/auth", authRoutes);
+app.use("/api/issues", issueRoutes);
+export default app;
+//# sourceMappingURL=app.js.map
