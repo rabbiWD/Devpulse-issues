@@ -33,3 +33,16 @@ Method -> POST | URL -> /auth/refresh | Time -> 2026-05-23T15:22:55.443Z
 Method -> POST | URL -> /auth/signup | Time -> 2026-05-23T15:28:32.652Z
 Method -> POST | URL -> /auth/login | Time -> 2026-05-23T15:30:20.229Z
 Method -> POST | URL -> /auth/refresh | Time -> 2026-05-23T15:41:01.709Z
+Method -> POST | URL -> /auth/login | Time -> 2026-05-24T05:09:06.901Z
+Method -> GET | URL -> /issues | Time -> 2026-05-24T05:13:44.105Z
+Method -> POST | URL -> /issues | Time -> 2026-05-24T05:13:52.512Z
+Method -> POST | URL -> /issues | Time -> 2026-05-24T05:16:32.634Z
+Method -> POST | URL -> /auth/login | Time -> 2026-05-24T05:34:17.617Z
+Method -> POST | URL -> /issues | Time -> 2026-05-24T05:52:05.017Z
+Method -> POST | URL -> / | Time -> 2026-05-24T05:53:41.494Z
+Method -> POST | URL -> /api/issues | Time -> 2026-05-24T05:56:10.632Z
+Method -> POST | URL -> /api/issues | Time -> 2026-05-24T06:02:40.707Z
+Method -> POST | URL -> /api/issues | Time -> 2026-05-24T06:04:24.198Z
+Method -> POST | URL -> /api/issues | Time -> 2026-05-24T06:04:39.012Z
+Method -> POST | URL -> /api/issues?sort=newest | Time -> 2026-05-24T06:32:11.088Z
+Method -> GET | URL -> /api/issues?sort=newest | Time -> 2026-05-24T06:32:22.132Z

@@ -21,3 +21,10 @@ export interface IJwtPayload {
   name: string;
   role: string;
 }
+
+
+export interface IIssueFilters {
+  sort?: "newest" | "oldest";
+  type?: string;
+  status?: string;
+}
