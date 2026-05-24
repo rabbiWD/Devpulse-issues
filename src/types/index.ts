@@ -1,6 +1,4 @@
-// export const ROLE = ['contributor', 'maintainer']
 
-// type Role = typeof role[number]
 export const USER_ROLE = {
   maintainer: "maintainer",
   contributor: "contributor",

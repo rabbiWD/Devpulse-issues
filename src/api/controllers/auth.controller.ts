@@ -1,7 +1,4 @@
 import type { Request, Response } from "express";
-import jwt from "jsonwebtoken";
-import config from "../../config";
-import type { IUser } from "../../types";
 import { signToken } from "../../utils/jwt";
 import authService from "../services/auth.service";
 
@@ -28,13 +25,6 @@ export const login = async (req: Request, res: Response) => {
     const user = await authService.validUser(email, password);
     const tokens = signToken(user);
 
-    // res.cookie("refreshToken", tokens.refreshToken, {
-    //   secure: false,
-    //   httpOnly: true,
-    //   sameSite: "lax",
-    //   path: "/",
-    // });
-
     res.status(200).json({
       success: true,
       message: "User login successfully",
@@ -53,47 +43,3 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-// export const refresh = async (req: Request, res: Response) => {
-//   try {
-//     const refreshToken = req.cookies?.refreshToken;
-
-//     if (!refreshToken) {
-//       return res.status(401).json({
-//         success: false,
-//         message: "Refresh token not found",
-//       });
-//     }
-
-//     const payload = jwt.verify(refreshToken, config.refresh_secret) as IUser;
-//     console.log("Payload:",payload)
-
-//     const accessToken = jwt.sign(payload, config.jwt_secret, {
-//       expiresIn: "1d",
-//     });
-
-//     const newRefreshToken = jwt.sign(payload, config.refresh_secret, {
-//       expiresIn: "7d",
-//     });
-
-//     res.cookie("refreshToken", newRefreshToken, {
-//       secure: false,
-//       httpOnly: true,
-//       sameSite: "lax",
-//       path: "/",
-//     });
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Access token refreshed",
-//       data: {
-//         accessToken,
-//       },
-//     });
-//   } catch (error: any) {
-//     res.clearCookie("refreshToken", { path: "/" });
-//     res.status(401).json({
-//       success: false,
-//       message: error.message,
-//     });
-//   }
-// };

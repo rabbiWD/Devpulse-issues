@@ -16,9 +16,6 @@ class AuthService {
   }
 
   async validUser(email: string, password: string) {
-    // const{name, email, password, role} = user
-
-    // const hashpassword = await bcrypt.hash(password, 10);
 
     const userData = await pool.query("SELECT * FROM users WHERE email =$1", [
       email,
