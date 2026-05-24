@@ -59,37 +59,53 @@ export const issueService = {
     return [];
   }
 
+  // collect reporter ids safely
   const reporterIds = [
-    ...new Set(issues.map(i => Number(i.reporter_id)))
+    ...new Set(
+      issues
+        .map(i => Number(i.reporter_id))
+        .filter(Boolean)
+    ),
   ];
 
-  const usersResult = await pool.query(`
-    SELECT id, name, role FROM users WHERE id = ANY($1)
-    `,
-    [reporterIds]
-  );
+  let userMap = new Map();
 
-  const userMap = new Map(
-    usersResult.rows.map(u => [u.id, u])
-  );
+  if (reporterIds.length > 0) {
+    const usersResult = await pool.query(
+      `
+      SELECT id, name, role
+      FROM users
+      WHERE id = ANY($1)
+      `,
+      [reporterIds]
+    );
 
-  return issues.map(issue => ({
-    id: issue.id,
-    title: issue.title,
-    description: issue.description,
-    type: issue.type,
-    status: issue.status,
-    created_at: issue.created_at,
-    updated_at: issue.updated_at,
-    reporter: userMap.get(Number(issue.reporter_id))
-      ? {
-          id: userMap.get(Number(issue.reporter_id)).id,
-          name: userMap.get(Number(issue.reporter_id)).name,
-          role: userMap.get(Number(issue.reporter_id)).role,
-        }
-      : null,
-  }));
-  },
+    userMap = new Map(
+      usersResult.rows.map(u => [Number(u.id), u])
+    );
+  }
+
+  return issues.map(issue => {
+    const reporter = userMap.get(Number(issue.reporter_id));
+
+    return {
+      id: issue.id,
+      title: issue.title,
+      description: issue.description,
+      type: issue.type,
+      status: issue.status,
+      created_at: issue.created_at,
+      updated_at: issue.updated_at,
+      reporter: reporter
+        ? {
+            id: reporter.id,
+            name: reporter.name,
+            role: reporter.role,
+          }
+        : null,
+    };
+  });
+},
 
   async getIssueById(id: number) {
   const result = await pool.query(
@@ -159,66 +175,65 @@ export const issueService = {
     throw new Error("Issue not found");
   }
 
-   // valid type check
+  // valid type check
   const validTypes = ["bug", "feature_request"];
 
-  if (
-    payload.type &&
-    !validTypes.includes(payload.type)
-  ) {
+  if (payload.type && !validTypes.includes(payload.type)) {
     throw new Error("Invalid issue type");
   }
 
   // valid status check
-  const validStatuses = [
-    "open",
-    "in_progress",
-    "resolved",
-  ];
+  const validStatuses = ["open", "in_progress", "resolved"];
 
-  if (
-    payload.status &&
-    !validStatuses.includes(payload.status)
-  ) {
+  if (payload.status && !validStatuses.includes(payload.status)) {
     throw new Error("Invalid issue status");
   }
 
   // contributor permission check
   if (user.role === "contributor") {
-    // only own issue
     if (Number(issue.reporter_id) !== Number(user.id)) {
       throw new Error("Forbidden");
     }
 
-    // only open issue
     if (issue.status !== "open") {
-      throw new Error(
-        "You can only update open issues"
-      );
+      throw new Error("You can only update open issues");
     }
 
-    // contributor cannot change status
     if (payload.status) {
-      throw new Error(
-        "Contributors cannot update issue status"
-      );
+      throw new Error("Contributors cannot update issue status");
     }
   }
 
-  const updatedIssue = await pool.query(`
+
+  let finalStatus = issue.status;
+ 
+  if (payload.status === "resolved") {
+    finalStatus = "resolved";
+  }
+  else if (
+    payload.title ||
+    payload.description ||
+    payload.type
+  ) {
+    finalStatus = "in_progress";
+  }
+
+  const updatedIssue = await pool.query(
+    `
     UPDATE issues SET
       title = COALESCE($1, title),
       description = COALESCE($2, description),
-      type = COALESCE($3, type), 
-      status = COALESCE($4, status),
-      updated_at = NOW() WHERE id = $5
-      RETURNING *
+      type = COALESCE($3, type),
+      status = $4,
+      updated_at = NOW()
+    WHERE id = $5
+    RETURNING *
     `,
     [
       payload.title ?? null,
       payload.description ?? null,
       payload.type ?? null,
-      payload.status ?? null,
+      finalStatus,
       id,
     ]
   );
