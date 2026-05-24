@@ -1,0 +1,7 @@
+Method -> GET | URL -> /api/issues | Time -> 2026-05-24T16:33:36.677Z
+Method -> GET | URL -> /favicon.ico | Time -> 2026-05-24T16:33:37.505Z
+Method -> PATCH | URL -> /api/issues/6 | Time -> 2026-05-24T16:56:30.259Z
+Method -> POST | URL -> /api/auth/login | Time -> 2026-05-24T16:57:02.655Z
+Method -> POST | URL -> /api/issues | Time -> 2026-05-24T16:57:37.384Z
+Method -> POST | URL -> /api/auth/login | Time -> 2026-05-24T16:58:09.786Z
+Method -> PATCH | URL -> /api/issues/7 | Time -> 2026-05-24T16:58:45.173Z
