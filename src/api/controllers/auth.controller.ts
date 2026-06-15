@@ -7,8 +7,13 @@ export const signup = async (req: Request, res: Response) => {
     const user = await authService.createUser(req.body);
     res.status(201).json({
       success: true,
-      message: "User created successfully",
-      data: user.rows[0],
+      message: "User registered successfully",
+      data: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }
     });
   } catch (error: any) {
     console.error("Error creating user:", error);
@@ -25,12 +30,20 @@ export const login = async (req: Request, res: Response) => {
 
   try {
     const user = await authService.validUser(email, password);
-    const tokens = signToken(user);
+    const token = signToken(user);
 
     res.status(200).json({
       success: true,
       message: "User login successfully",
-      data: {user, tokens,},
+      data: {
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        }
+      }
     });
   } catch (error: any) {
     res.status(500).json({

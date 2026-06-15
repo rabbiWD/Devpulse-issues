@@ -3,6 +3,14 @@ import { issueService } from "../services/issue.service";
 
 export const createIssue = async (req: Request, res: Response) => {
   try {
+
+      if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
     const issue = await issueService.createIssue(req.body, req.user);
 
     res.status(201).json({

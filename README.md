@@ -198,7 +198,7 @@ npm start
 | `title`       | VARCHAR(150) | Short summary of the issue                |
 | `description` | TEXT         | Full description of the issue             |
 | `type`        | VARCHAR(30)  | `bug` or `feature`                        |
-| `status`      | VARCHAR(30)  | `open` (default), `in-progress`, `closed` |
+| `status`      | VARCHAR(30)  | `open` (default), `in-progress`, `resolved` |
 | `reporter_id` | INT          | Foreign key referencing `users.id`        |
 | `created_at`  | TIMESTAMP    | Record creation time                      |
 | `updated_at`  | TIMESTAMP    | Last update time                          |

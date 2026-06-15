@@ -6,87 +6,138 @@ export const issueService = {
     payload: { title: string; description: string; type: string },
     user: IJwtPayload,
   ) {
+    if (!user?.id) {
+      throw new  Error("Unauthorized");
+    }
+
+    if (!payload.title || payload.title.length > 150) {
+      throw new Error("Invalid title");
+    }
+
+    if (!payload.description || payload.description.length < 20) {
+      throw new Error("Invalid description");
+    }
+
+    const validTypes = ["bug", "feature_request"];
+    if (!validTypes.includes(payload.type)) {
+      throw new Error("Invalid issue type");
+    }
     const reporterId = Number(user.id);
 
     const result = await pool.query(
       `INSERT INTO issues (title, description, type, reporter_id)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [
-        payload.title,
-        payload.description,
-        payload.type,
-        reporterId,
-      ],
+      [payload.title, payload.description, payload.type, reporterId],
     );
 
     return result.rows[0];
   },
 
   async getIssues(filters: IIssueFilters = {}) {
-  const sort = filters.sort === "oldest" ? "ASC" : "DESC";
+    const sort = filters.sort === "oldest" ? "ASC" : "DESC";
 
-  const conditions: string[] = [];
-  const values: any[] = [];
+    const conditions: string[] = [];
+    const values: any[] = [];
 
-  if (filters.type) {
-    values.push(filters.type);
-    conditions.push(`type = $${values.length}`);
-  }
+    if (filters.type) {
+      values.push(filters.type);
+      conditions.push(`type = $${values.length}`);
+    }
 
-  if (filters.status) {
-    values.push(filters.status);
-    conditions.push(`status = $${values.length}`);
-  }
+    if (filters.status) {
+      values.push(filters.status);
+      conditions.push(`status = $${values.length}`);
+    }
 
-  const whereClause = conditions.length
-    ? `WHERE ${conditions.join(" AND ")}`
-    : "";
+    const whereClause = conditions.length
+      ? `WHERE ${conditions.join(" AND ")}`
+      : "";
 
-  const result = await pool.query(
-    `
+    const result = await pool.query(
+      `
     SELECT id, title, description, type, status, reporter_id, created_at, updated_at
     FROM issues
     ${whereClause}
     ORDER BY created_at ${sort}
     `,
-    values
-  );
+      values,
+    );
 
-  const issues = result.rows;
+    const issues = result.rows;
 
-  if (!issues.length) {
-    return [];
-  }
+    if (!issues.length) {
+      return [];
+    }
 
-  // collect reporter ids safely
-  const reporterIds = [
-    ...new Set(
-      issues
-        .map(i => Number(i.reporter_id))
-        .filter(Boolean)
-    ),
-  ];
+    // collect reporter ids safely
+    const reporterIds = [
+      ...new Set(issues.map((i) => Number(i.reporter_id)).filter(Boolean)),
+    ];
 
-  let userMap = new Map();
+    let userMap = new Map();
 
-  if (reporterIds.length > 0) {
-    const usersResult = await pool.query(
-      `
+    if (reporterIds.length > 0) {
+      const usersResult = await pool.query(
+        `
       SELECT id, name, role
       FROM users
       WHERE id = ANY($1)
       `,
-      [reporterIds]
+        [reporterIds],
+      );
+
+      userMap = new Map(usersResult.rows.map((u) => [Number(u.id), u]));
+    }
+
+    return issues.map((issue) => {
+      const reporter = userMap.get(Number(issue.reporter_id));
+
+      return {
+        id: issue.id,
+        title: issue.title,
+        description: issue.description,
+        type: issue.type,
+        status: issue.status,
+        created_at: issue.created_at,
+        updated_at: issue.updated_at,
+        reporter: reporter
+          ? {
+              id: reporter.id,
+              name: reporter.name,
+              role: reporter.role,
+            }
+          : null,
+      };
+    });
+  },
+
+  async getIssueById(id: number) {
+    const result = await pool.query(
+      `
+    SELECT id, title, description, type, status, reporter_id, created_at, updated_at
+    FROM issues
+    WHERE id = $1
+    `,
+      [id],
     );
 
-    userMap = new Map(
-      usersResult.rows.map(u => [Number(u.id), u])
-    );
-  }
+    if (!result.rows.length) {
+      return null;
+    }
 
-  return issues.map(issue => {
-    const reporter = userMap.get(Number(issue.reporter_id));
+    const issue = result.rows[0];
+
+    const userResult = await pool.query(
+      `
+    SELECT id, name, role
+    FROM users
+    WHERE id = $1
+    `,
+      [issue.reporter_id],
+    );
+
+    const reporter = userResult.rows[0];
 
     return {
       id: issue.id,
@@ -104,55 +155,9 @@ export const issueService = {
           }
         : null,
     };
-  });
-},
-
-  async getIssueById(id: number) {
-  const result = await pool.query(
-    `
-    SELECT id, title, description, type, status, reporter_id, created_at, updated_at
-    FROM issues
-    WHERE id = $1
-    `,
-    [id]
-  );
-
-  if (!result.rows.length) {
-    return null;
-  }
-
-  const issue = result.rows[0];
-
-  const userResult = await pool.query(
-    `
-    SELECT id, name, role
-    FROM users
-    WHERE id = $1
-    `,
-    [issue.reporter_id]
-  );
-
-  const reporter = userResult.rows[0];
-
-  return {
-    id: issue.id,
-    title: issue.title,
-    description: issue.description,
-    type: issue.type,
-    status: issue.status,
-    created_at: issue.created_at,
-    updated_at: issue.updated_at,
-    reporter: reporter
-      ? {
-          id: reporter.id,
-          name: reporter.name,
-          role: reporter.role,
-        }
-      : null,
-  };
   },
 
-  async updateIssue(
+ async updateIssue(
   id: number,
   payload: {
     title?: string;
@@ -162,34 +167,17 @@ export const issueService = {
   },
   user: IJwtPayload
 ) {
-  const existingIssue = await pool.query(
-    `
-    SELECT * FROM issues WHERE id = $1
-    `,
+  const result = await pool.query(
+    `SELECT * FROM issues WHERE id = $1`,
     [id]
   );
 
-  const issue = existingIssue.rows[0];
+  const issue = result.rows[0];
 
   if (!issue) {
     throw new Error("Issue not found");
   }
 
-  // valid type check
-  const validTypes = ["bug", "feature_request"];
-
-  if (payload.type && !validTypes.includes(payload.type)) {
-    throw new Error("Invalid issue type");
-  }
-
-  // valid status check
-  const validStatuses = ["open", "in_progress", "resolved"];
-
-  if (payload.status && !validStatuses.includes(payload.status)) {
-    throw new Error("Invalid issue status");
-  }
-
-  // contributor permission check
   if (user.role === "contributor") {
     if (Number(issue.reporter_id) !== Number(user.id)) {
       throw new Error("Forbidden");
@@ -199,32 +187,29 @@ export const issueService = {
       throw new Error("You can only update open issues");
     }
 
-    if (payload.status) {
-      throw new Error("Contributors cannot update issue status");
+    if (payload.status && payload.status !== "open") {
+      throw new Error("Contributors cannot change status");
     }
   }
 
+  const validTypes = ["bug", "feature_request"];
+  const validStatuses = ["open", "in_progress", "resolved"];
 
-  let finalStatus = issue.status;
- 
-  if (payload.status === "resolved") {
-    finalStatus = "resolved";
-  }
-  else if (
-    payload.title ||
-    payload.description ||
-    payload.type
-  ) {
-    finalStatus = "in_progress";
+  if (payload.type && !validTypes.includes(payload.type)) {
+    throw new Error("Invalid issue type");
   }
 
-  const updatedIssue = await pool.query(
+  if (payload.status && !validStatuses.includes(payload.status)) {
+    throw new Error("Invalid issue status");
+  }
+
+  const updated = await pool.query(
     `
     UPDATE issues SET
       title = COALESCE($1, title),
       description = COALESCE($2, description),
       type = COALESCE($3, type),
-      status = $4,
+      status = COALESCE($4, status),
       updated_at = NOW()
     WHERE id = $5
     RETURNING *
@@ -233,46 +218,41 @@ export const issueService = {
       payload.title ?? null,
       payload.description ?? null,
       payload.type ?? null,
-      finalStatus,
+      payload.status ?? null,
       id,
     ]
   );
 
-  return updatedIssue.rows[0];
-  },
+  return updated.rows[0];
+},
 
   async deleteIssue(id: number, user: IJwtPayload) {
-  // maintainer only check
-  if (user.role !== "maintainer") {
-    throw new Error("Forbidden");
-  }
+    if (user.role !== "maintainer") {
+      throw new Error("Forbidden");
+    }
 
-  // check issue exists
-  const existingIssue = await pool.query(
-    `
+    const existingIssue = await pool.query(
+      `
     SELECT id FROM issues WHERE id = $1
     `,
-    [id]
-  );
+      [id],
+    );
 
-  if (!existingIssue.rows[0]) {
-    throw new Error("Issue not found");
-  }
+    if (!existingIssue.rows.length) {
+      throw new Error("Issue not found");
+    }
 
-  // delete issue
-  await pool.query(
-    `
+    await pool.query(
+      `
     DELETE FROM issues
     WHERE id = $1
     `,
-    [id]
-  );
+      [id],
+    );
 
-  return true;
-}
-
-
-
-}
-
-
+    return {
+      success: true,
+      message: "Issue deleted successfully",
+    }
+  },
+};
