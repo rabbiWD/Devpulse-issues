@@ -215,10 +215,10 @@ export const issueService = {
     RETURNING *
     `,
     [
-      payload.title ?? null,
-      payload.description ?? null,
-      payload.type ?? null,
-      payload.status ?? null,
+      payload.title,
+      payload.description,
+      payload.type,
+      payload.status,
       id,
     ]
   );
@@ -241,6 +241,7 @@ export const issueService = {
     if (!existingIssue.rows.length) {
       throw new Error("Issue not found");
     }
+    
 
     await pool.query(
       `

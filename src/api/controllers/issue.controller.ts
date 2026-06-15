@@ -75,10 +75,17 @@ export const getSingleIssue = async (req: Request, res: Response) => {
 
 export const updateIssue = async (req: Request, res: Response) => {
   try {
+      if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
     const issue = await issueService.updateIssue(
       Number(req.params.id),
       req.body,
-      req.user,
+      req.user
     );
 
     return res.status(200).json({
@@ -113,6 +120,13 @@ export const updateIssue = async (req: Request, res: Response) => {
 
 export const deleteIssue = async (req: Request, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
     await issueService.deleteIssue(Number(req.params.id), req.user);
 
     return res.status(200).json({
