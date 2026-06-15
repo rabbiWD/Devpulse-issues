@@ -67,6 +67,7 @@ class AuthService {
     }
 
     const user = userData.rows[0];
+    
 
     const matchPassword = await bcrypt.compare(password, user.password);
 

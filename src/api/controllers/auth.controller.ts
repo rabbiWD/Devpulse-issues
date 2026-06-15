@@ -13,6 +13,8 @@ export const signup = async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at,
       }
     });
   } catch (error: any) {
@@ -42,6 +44,8 @@ export const login = async (req: Request, res: Response) => {
           name: user.name,
           email: user.email,
           role: user.role,
+          createdAt: user.created_at,
+          updatedAt: user.updated_at,
         }
       }
     });
